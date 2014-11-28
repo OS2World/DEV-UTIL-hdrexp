@@ -1,0 +1,933 @@
+
+Module: D:\source\os2\hdrexp\hdrexp.cpp
+Group: 'DGROUP' CONST,CONST2,_DATA,_BSS
+
+Segment: _TEXT  PARA USE32  0000056d bytes  
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+int currentLevel=0;
+int maxLevel=1;
+FILE *ofp;
+const char **includedirs;
+
+static FILE *openFileSomewhere(const char *filename) {
+ 0000                    __iobuf near * near openFileSomewhere( char const near * ):
+ 0000  53                                push    ebx
+ 0001  51                                push    ecx
+ 0002  52                                push    edx
+ 0003  56                                push    esi
+ 0004  57                                push    edi
+ 0005  55                                push    ebp
+ 0006  89 e5                             mov     ebp,esp
+ 0008  81 ec 10 01 00 00                 sub     esp,00000110H
+ 000e  89 45 fc                          mov     -4H[ebp],eax
+
+        const char **p=includedirs;
+ 0011  a1 00 00 00 00                    mov     eax,char const near * near * near includedirs
+ 0016  89 45 f8                          mov     -8H[ebp],eax
+
+        while(*p) {
+                //build name
+                char name[256];
+ 0019  8b 45 f8          L1              mov     eax,-8H[ebp]
+ 001c  83 38 00                          cmp     dword ptr [eax],00000000H
+ 001f  74 51                             je      L3
+
+                strcpy(name,*p);
+ 0021  8b 55 f8                          mov     edx,-8H[ebp]
+ 0024  8b 12                             mov     edx,[edx]
+ 0026  8d 85 f0 fe ff ff                 lea     eax,-110H[ebp]
+ 002c  e8 00 00 00 00                    call    strcpy_
+
+                strcat(name,"/");
+ 0031  ba 00 00 00 00                    mov     edx,offset L59
+ 0036  8d 85 f0 fe ff ff                 lea     eax,-110H[ebp]
+ 003c  e8 00 00 00 00                    call    strcat_
+
+                strcat(name,filename);
+
+ 0041  8b 55 fc                          mov     edx,-4H[ebp]
+ 0044  8d 85 f0 fe ff ff                 lea     eax,-110H[ebp]
+ 004a  e8 00 00 00 00                    call    strcat_
+
+                FILE *ifp=fopen(name,"rt");
+ 004f  ba 02 00 00 00                    mov     edx,offset L60
+ 0054  8d 85 f0 fe ff ff                 lea     eax,-110H[ebp]
+ 005a  e8 00 00 00 00                    call    fopen_
+ 005f  89 45 f0                          mov     -10H[ebp],eax
+
+                if(ifp) 
+ 0062  83 7d f0 00                       cmp     dword ptr -10H[ebp],00000000H
+ 0066  74 08                             je      L2
+
+                        return ifp;
+ 0068  8b 45 f0                          mov     eax,-10H[ebp]
+ 006b  89 45 f4                          mov     -0cH[ebp],eax
+ 006e  eb 09                             jmp     L4
+
+        }
+ 0070  eb a7             L2              jmp     L1
+
+        return NULL;
+ 0072  c7 45 f4 00 00 00 
+       00                L3              mov     dword ptr -0cH[ebp],00000000H
+
+}
+
+ 0079  8b 45 f4          L4              mov     eax,-0cH[ebp]
+ 007c  89 ec                             mov     esp,ebp
+ 007e  5d                                pop     ebp
+ 007f  5f                                pop     edi
+ 0080  5e                                pop     esi
+ 0081  5a                                pop     edx
+ 0082  59                                pop     ecx
+ 0083  5b                                pop     ebx
+ 0084  c3                                ret     
+ 0085  8d 40 00                          lea     eax,+0H[eax]
+
+static FILE *openFileHere(const char *filename) {
+ 0088                    __iobuf near * near openFileHere( char const near * ):
+ 0088  53                                push    ebx
+ 0089  51                                push    ecx
+ 008a  52                                push    edx
+ 008b  56                                push    esi
+ 008c  57                                push    edi
+ 008d  55                                push    ebp
+ 008e  89 e5                             mov     ebp,esp
+ 0090  81 ec 0c 00 00 00                 sub     esp,0000000cH
+ 0096  89 45 fc                          mov     -4H[ebp],eax
+
+        FILE *ifp=fopen(filename,"rt");
+ 0099  ba 05 00 00 00                    mov     edx,offset L61
+ 009e  8b 45 fc                          mov     eax,-4H[ebp]
+ 00a1  e8 00 00 00 00                    call    fopen_
+ 00a6  89 45 f8                          mov     -8H[ebp],eax
+
+        if(ifp) 
+ 00a9  83 7d f8 00                       cmp     dword ptr -8H[ebp],00000000H
+ 00ad  74 08                             je      L5
+
+                return ifp;
+        else
+ 00af  8b 45 f8                          mov     eax,-8H[ebp]
+ 00b2  89 45 f4                          mov     -0cH[ebp],eax
+ 00b5  eb 0b                             jmp     L6
+
+                return openFileSomewhere(filename);
+ 00b7  8b 45 fc          L5              mov     eax,-4H[ebp]
+ 00ba  e8 00 00 00 00                    call    __iobuf near * near openFileSomewhere( char const near * )
+ 00bf  89 45 f4                          mov     -0cH[ebp],eax
+
+}
+
+ 00c2  8b 45 f4          L6              mov     eax,-0cH[ebp]
+ 00c5  89 ec                             mov     esp,ebp
+ 00c7  5d                                pop     ebp
+ 00c8  5f                                pop     edi
+ 00c9  5e                                pop     esi
+ 00ca  5a                                pop     edx
+ 00cb  59                                pop     ecx
+ 00cc  5b                                pop     ebx
+ 00cd  c3                                ret     
+ 00ce  8b c0                             mov     eax,eax
+
+static int defDump(const char *line) {
+ 00d0                    int near defDump( char const near * ):
+ 00d0  53                                push    ebx
+ 00d1  51                                push    ecx
+ 00d2  52                                push    edx
+ 00d3  56                                push    esi
+ 00d4  57                                push    edi
+ 00d5  55                                push    ebp
+ 00d6  89 e5                             mov     ebp,esp
+ 00d8  81 ec 08 00 00 00                 sub     esp,00000008H
+ 00de  89 45 fc                          mov     -4H[ebp],eax
+
+        if(fputs(line,ofp)==EOF) {
+ 00e1  8b 15 00 00 00 00                 mov     edx,__iobuf near * near ofp
+ 00e7  8b 45 fc                          mov     eax,-4H[ebp]
+ 00ea  e8 00 00 00 00                    call    fputs_
+ 00ef  83 f8 ff                          cmp     eax,0ffffffffH
+ 00f2  75 1d                             jne     L7
+
+                fprintf(stderr,"hdrexp: write error\n");
+ 00f4  b8 08 00 00 00                    mov     eax,offset L62
+ 00f9  50                                push    eax
+ 00fa  b8 34 00 00 00                    mov     eax,offset ___iob+34H
+ 00ff  50                                push    eax
+ 0100  e8 00 00 00 00                    call    fprintf_
+ 0105  83 c4 08                          add     esp,00000008H
+
+                return -1;
+        } else
+ 0108  c7 45 f8 ff ff ff 
+       ff                                mov     dword ptr -8H[ebp],0ffffffffH
+ 010f  eb 07                             jmp     L8
+
+                return 0;
+ 0111  c7 45 f8 00 00 00 
+       00                L7              mov     dword ptr -8H[ebp],00000000H
+
+}
+
+static int expandFile(FILE *ifp);
+
+ 0118  8b 45 f8          L8              mov     eax,-8H[ebp]
+ 011b  89 ec                             mov     esp,ebp
+ 011d  5d                                pop     ebp
+ 011e  5f                                pop     edi
+ 011f  5e                                pop     esi
+ 0120  5a                                pop     edx
+ 0121  59                                pop     ecx
+ 0122  5b                                pop     ebx
+ 0123  c3                                ret     
+
+static int processLine(const char *line) {
+ 0124                    int near processLine( char const near * ):
+ 0124  53                                push    ebx
+ 0125  51                                push    ecx
+ 0126  52                                push    edx
+ 0127  56                                push    esi
+ 0128  57                                push    edi
+ 0129  55                                push    ebp
+ 012a  89 e5                             mov     ebp,esp
+ 012c  81 ec 20 01 00 00                 sub     esp,00000120H
+ 0132  89 45 fc                          mov     -4H[ebp],eax
+
+        if(currentLevel>maxLevel) return defDump(line);
+
+ 0135  a1 00 00 00 00                    mov     eax,int near currentLevel
+ 013a  3b 05 00 00 00 00                 cmp     eax,int near maxLevel
+ 0140  7e 10                             jle     L9
+ 0142  8b 45 fc                          mov     eax,-4H[ebp]
+ 0145  e8 00 00 00 00                    call    int near defDump( char const near * )
+ 014a  89 45 e0                          mov     -20H[ebp],eax
+ 014d  e9 20 02 00 00                    jmp     L45
+
+        const char *p=line;
+ 0152  8b 45 fc          L9              mov     eax,-4H[ebp]
+ 0155  89 45 f0                          mov     -10H[ebp],eax
+
+        while(*p==' ' || *p=='\t') p++;
+ 0158  8b 45 f0          L10             mov     eax,-10H[ebp]
+ 015b  8a 00                             mov     al,[eax]
+ 015d  25 ff 00 00 00                    and     eax,000000ffH
+ 0162  83 f8 20                          cmp     eax,00000020H
+ 0165  74 0f                             je      L11
+ 0167  8b 45 f0                          mov     eax,-10H[ebp]
+ 016a  8a 00                             mov     al,[eax]
+ 016c  25 ff 00 00 00                    and     eax,000000ffH
+ 0171  83 f8 09                          cmp     eax,00000009H
+ 0174  75 08                             jne     L12
+ 0176  8b 45 f0          L11             mov     eax,-10H[ebp]
+ 0179  ff 45 f0                          inc     dword ptr -10H[ebp]
+ 017c  eb da                             jmp     L10
+
+        if(*p!='#') return defDump(line);
+ 017e  8b 45 f0          L12             mov     eax,-10H[ebp]
+ 0181  8a 00                             mov     al,[eax]
+ 0183  25 ff 00 00 00                    and     eax,000000ffH
+ 0188  83 f8 23                          cmp     eax,00000023H
+ 018b  74 10                             je      L13
+ 018d  8b 45 fc                          mov     eax,-4H[ebp]
+ 0190  e8 00 00 00 00                    call    int near defDump( char const near * )
+ 0195  89 45 e0                          mov     -20H[ebp],eax
+ 0198  e9 d5 01 00 00                    jmp     L45
+
+        p++;
+ 019d  8b 45 f0          L13             mov     eax,-10H[ebp]
+ 01a0  ff 45 f0                          inc     dword ptr -10H[ebp]
+
+        while(*p==' ' || *p=='\t') p++;
+        if(p[0]!='i' ||
+ 01a3  8b 45 f0          L14             mov     eax,-10H[ebp]
+ 01a6  8a 00                             mov     al,[eax]
+ 01a8  25 ff 00 00 00                    and     eax,000000ffH
+ 01ad  83 f8 20                          cmp     eax,00000020H
+ 01b0  74 0f                             je      L15
+ 01b2  8b 45 f0                          mov     eax,-10H[ebp]
+ 01b5  8a 00                             mov     al,[eax]
+ 01b7  25 ff 00 00 00                    and     eax,000000ffH
+ 01bc  83 f8 09                          cmp     eax,00000009H
+ 01bf  75 08                             jne     L16
+ 01c1  8b 45 f0          L15             mov     eax,-10H[ebp]
+ 01c4  ff 45 f0                          inc     dword ptr -10H[ebp]
+ 01c7  eb da                             jmp     L14
+
+           p[1]!='n' ||
+           p[1]!='c' ||
+           p[1]!='l' ||
+           p[1]!='u' ||
+           p[1]!='d' ||
+           p[1]!='e')
+ 01c9  8b 45 f0          L16             mov     eax,-10H[ebp]
+ 01cc  8a 00                             mov     al,[eax]
+ 01ce  25 ff 00 00 00                    and     eax,000000ffH
+ 01d3  83 f8 69                          cmp     eax,00000069H
+ 01d6  75 10                             jne     L17
+ 01d8  8b 45 f0                          mov     eax,-10H[ebp]
+ 01db  8a 40 01                          mov     al,+1H[eax]
+ 01de  25 ff 00 00 00                    and     eax,000000ffH
+ 01e3  83 f8 6e                          cmp     eax,0000006eH
+ 01e6  74 02                             je      L18
+ 01e8  eb 10             L17             jmp     L19
+ 01ea  8b 45 f0          L18             mov     eax,-10H[ebp]
+ 01ed  8a 40 01                          mov     al,+1H[eax]
+ 01f0  25 ff 00 00 00                    and     eax,000000ffH
+ 01f5  83 f8 63                          cmp     eax,00000063H
+ 01f8  74 02                             je      L20
+ 01fa  eb 10             L19             jmp     L21
+ 01fc  8b 45 f0          L20             mov     eax,-10H[ebp]
+ 01ff  8a 40 01                          mov     al,+1H[eax]
+ 0202  25 ff 00 00 00                    and     eax,000000ffH
+ 0207  83 f8 6c                          cmp     eax,0000006cH
+ 020a  74 02                             je      L22
+ 020c  eb 10             L21             jmp     L23
+ 020e  8b 45 f0          L22             mov     eax,-10H[ebp]
+ 0211  8a 40 01                          mov     al,+1H[eax]
+ 0214  25 ff 00 00 00                    and     eax,000000ffH
+ 0219  83 f8 75                          cmp     eax,00000075H
+ 021c  74 02                             je      L24
+ 021e  eb 10             L23             jmp     L25
+ 0220  8b 45 f0          L24             mov     eax,-10H[ebp]
+ 0223  8a 40 01                          mov     al,+1H[eax]
+ 0226  25 ff 00 00 00                    and     eax,000000ffH
+ 022b  83 f8 64                          cmp     eax,00000064H
+ 022e  74 02                             je      L26
+ 0230  eb 10             L25             jmp     L27
+ 0232  8b 45 f0          L26             mov     eax,-10H[ebp]
+ 0235  8a 40 01                          mov     al,+1H[eax]
+ 0238  25 ff 00 00 00                    and     eax,000000ffH
+ 023d  83 f8 65                          cmp     eax,00000065H
+ 0240  74 10                             je      L28
+
+                return defDump(line);
+ 0242  8b 45 fc          L27             mov     eax,-4H[ebp]
+ 0245  e8 00 00 00 00                    call    int near defDump( char const near * )
+ 024a  89 45 e0                          mov     -20H[ebp],eax
+ 024d  e9 20 01 00 00                    jmp     L45
+
+        p+=7;
+ 0252  83 45 f0 07       L28             add     dword ptr -10H[ebp],00000007H
+
+        while(*p==' ' || *p=='\t') p++;
+
+        char echar;
+ 0256  8b 45 f0          L29             mov     eax,-10H[ebp]
+ 0259  8a 00                             mov     al,[eax]
+ 025b  25 ff 00 00 00                    and     eax,000000ffH
+ 0260  83 f8 20                          cmp     eax,00000020H
+ 0263  74 0f                             je      L30
+ 0265  8b 45 f0                          mov     eax,-10H[ebp]
+ 0268  8a 00                             mov     al,[eax]
+ 026a  25 ff 00 00 00                    and     eax,000000ffH
+ 026f  83 f8 09                          cmp     eax,00000009H
+ 0272  75 08                             jne     L31
+ 0274  8b 45 f0          L30             mov     eax,-10H[ebp]
+ 0277  ff 45 f0                          inc     dword ptr -10H[ebp]
+ 027a  eb da                             jmp     L29
+
+        if(*p=='<')
+ 027c  8b 45 f0          L31             mov     eax,-10H[ebp]
+ 027f  8a 00                             mov     al,[eax]
+ 0281  25 ff 00 00 00                    and     eax,000000ffH
+ 0286  83 f8 3c                          cmp     eax,0000003cH
+ 0289  75 06                             jne     L32
+
+                echar='>';
+ 028b  c6 45 f8 3e                       mov     byte ptr -8H[ebp],3eH
+ 028f  eb 25                             jmp     L34
+
+        else if(*p=='"')
+ 0291  8b 45 f0          L32             mov     eax,-10H[ebp]
+ 0294  8a 00                             mov     al,[eax]
+ 0296  25 ff 00 00 00                    and     eax,000000ffH
+ 029b  83 f8 22                          cmp     eax,00000022H
+ 029e  75 06                             jne     L33
+
+                echar='"';
+        else
+ 02a0  c6 45 f8 22                       mov     byte ptr -8H[ebp],22H
+ 02a4  eb 10                             jmp     L34
+
+                return defDump(line);
+
+ 02a6  8b 45 fc          L33             mov     eax,-4H[ebp]
+ 02a9  e8 00 00 00 00                    call    int near defDump( char const near * )
+ 02ae  89 45 e0                          mov     -20H[ebp],eax
+ 02b1  e9 bc 00 00 00                    jmp     L45
+
+        const char *start=p+1;
+ 02b6  8b 45 f0          L34             mov     eax,-10H[ebp]
+ 02b9  40                                inc     eax
+ 02ba  89 45 e8                          mov     -18H[ebp],eax
+
+        const char *end=start+1;
+ 02bd  8b 45 e8                          mov     eax,-18H[ebp]
+ 02c0  40                                inc     eax
+ 02c1  89 45 ec                          mov     -14H[ebp],eax
+
+        while(*end && *end!=echar) end++;
+ 02c4  8b 45 ec          L35             mov     eax,-14H[ebp]
+ 02c7  80 38 00                          cmp     byte ptr [eax],00H
+ 02ca  74 10                             je      L36
+ 02cc  8b 45 ec                          mov     eax,-14H[ebp]
+ 02cf  31 d2                             xor     edx,edx
+ 02d1  8a 10                             mov     dl,[eax]
+ 02d3  31 c0                             xor     eax,eax
+ 02d5  8a 45 f8                          mov     al,-8H[ebp]
+ 02d8  39 c2                             cmp     edx,eax
+ 02da  75 02                             jne     L37
+ 02dc  eb 08             L36             jmp     L38
+ 02de  8b 45 ec          L37             mov     eax,-14H[ebp]
+ 02e1  ff 45 ec                          inc     dword ptr -14H[ebp]
+ 02e4  eb de                             jmp     L35
+
+        if(!*end)
+ 02e6  8b 45 ec          L38             mov     eax,-14H[ebp]
+ 02e9  80 38 00                          cmp     byte ptr [eax],00H
+ 02ec  75 10                             jne     L39
+
+                return defDump(line);
+
+        char incName[256];
+ 02ee  8b 45 fc                          mov     eax,-4H[ebp]
+ 02f1  e8 00 00 00 00                    call    int near defDump( char const near * )
+ 02f6  89 45 e0                          mov     -20H[ebp],eax
+ 02f9  e9 74 00 00 00                    jmp     L45
+
+        char *d=incName;
+ 02fe  8d 85 e0 fe ff ff L39             lea     eax,-120H[ebp]
+ 0304  89 45 e4                          mov     -1cH[ebp],eax
+
+        while(start<end) {
+ 0307  8b 45 e8          L40             mov     eax,-18H[ebp]
+ 030a  3b 45 ec                          cmp     eax,-14H[ebp]
+ 030d  73 12                             jae     L41
+
+                *d++=*start++;
+ 030f  8b 45 e8                          mov     eax,-18H[ebp]
+ 0312  ff 45 e8                          inc     dword ptr -18H[ebp]
+ 0315  8b 55 e4                          mov     edx,-1cH[ebp]
+ 0318  ff 45 e4                          inc     dword ptr -1cH[ebp]
+ 031b  8a 00                             mov     al,[eax]
+ 031d  88 02                             mov     [edx],al
+
+        }
+ 031f  eb e6                             jmp     L40
+
+        *d='\0';
+
+        FILE *ifp;
+ 0321  8b 45 e4          L41             mov     eax,-1cH[ebp]
+ 0324  c6 00 00                          mov     byte ptr [eax],00H
+
+        if(*p=='"')
+ 0327  8b 45 f0                          mov     eax,-10H[ebp]
+ 032a  8a 00                             mov     al,[eax]
+ 032c  25 ff 00 00 00                    and     eax,000000ffH
+ 0331  83 f8 22                          cmp     eax,00000022H
+ 0334  75 10                             jne     L42
+
+                ifp=openFileHere(incName);
+        else
+ 0336  8d 85 e0 fe ff ff                 lea     eax,-120H[ebp]
+ 033c  e8 00 00 00 00                    call    __iobuf near * near openFileHere( char const near * )
+ 0341  89 45 f4                          mov     -0cH[ebp],eax
+ 0344  eb 0e                             jmp     L43
+
+                ifp=openFileSomewhere(incName);
+ 0346  8d 85 e0 fe ff ff L42             lea     eax,-120H[ebp]
+ 034c  e8 00 00 00 00                    call    __iobuf near * near openFileSomewhere( char const near * )
+ 0351  89 45 f4                          mov     -0cH[ebp],eax
+
+        if(ifp)
+ 0354  83 7d f4 00       L43             cmp     dword ptr -0cH[ebp],00000000H
+ 0358  74 0d                             je      L44
+
+                return expandFile(ifp);
+        else
+ 035a  8b 45 f4                          mov     eax,-0cH[ebp]
+ 035d  e8 00 00 00 00                    call    int near expandFile( __iobuf near * )
+ 0362  89 45 e0                          mov     -20H[ebp],eax
+ 0365  eb 0b                             jmp     L45
+
+                return defDump(line);
+ 0367  8b 45 fc          L44             mov     eax,-4H[ebp]
+ 036a  e8 00 00 00 00                    call    int near defDump( char const near * )
+ 036f  89 45 e0                          mov     -20H[ebp],eax
+
+}
+
+
+
+ 0372  8b 45 e0          L45             mov     eax,-20H[ebp]
+ 0375  89 ec                             mov     esp,ebp
+ 0377  5d                                pop     ebp
+ 0378  5f                                pop     edi
+ 0379  5e                                pop     esi
+ 037a  5a                                pop     edx
+ 037b  59                                pop     ecx
+ 037c  5b                                pop     ebx
+ 037d  c3                                ret     
+ 037e  8b c0                             mov     eax,eax
+
+static int expandFile(FILE *ifp) {
+ 0380                    int near expandFile( __iobuf near * ):
+ 0380  53                                push    ebx
+ 0381  51                                push    ecx
+ 0382  52                                push    edx
+ 0383  56                                push    esi
+ 0384  57                                push    edi
+ 0385  55                                push    ebp
+ 0386  89 e5                             mov     ebp,esp
+ 0388  81 ec 0c 01 00 00                 sub     esp,0000010cH
+ 038e  89 45 fc                          mov     -4H[ebp],eax
+
+        currentLevel++;
+        char line[256];
+ 0391  ff 05 00 00 00 00                 inc     dword ptr int near currentLevel
+
+        int r=0;
+ 0397  c7 45 f8 00 00 00 
+       00                                mov     dword ptr -8H[ebp],00000000H
+
+        while(fgets(line,256,ifp) && r==0) 
+ 039e  8b 5d fc          L46             mov     ebx,-4H[ebp]
+ 03a1  ba 00 01 00 00                    mov     edx,00000100H
+ 03a6  8d 85 f8 fe ff ff                 lea     eax,-108H[ebp]
+ 03ac  e8 00 00 00 00                    call    fgets_
+ 03b1  85 c0                             test    eax,eax
+ 03b3  74 06                             je      L47
+ 03b5  83 7d f8 00                       cmp     dword ptr -8H[ebp],00000000H
+ 03b9  74 02                             je      L48
+ 03bb  eb 10             L47             jmp     L49
+
+                r=processLine(line);
+ 03bd  8d 85 f8 fe ff ff L48             lea     eax,-108H[ebp]
+ 03c3  e8 00 00 00 00                    call    int near processLine( char const near * )
+ 03c8  89 45 f8                          mov     -8H[ebp],eax
+ 03cb  eb d1                             jmp     L46
+
+        currentLevel--;
+ 03cd  ff 0d 00 00 00 00 L49             dec     dword ptr int near currentLevel
+
+        return r;
+ 03d3  8b 45 f8                          mov     eax,-8H[ebp]
+ 03d6  89 85 f4 fe ff ff                 mov     -10cH[ebp],eax
+
+}
+
+
+ 03dc  8b 85 f4 fe ff ff                 mov     eax,-10cH[ebp]
+ 03e2  89 ec                             mov     esp,ebp
+ 03e4  5d                                pop     ebp
+ 03e5  5f                                pop     edi
+ 03e6  5e                                pop     esi
+ 03e7  5a                                pop     edx
+ 03e8  59                                pop     ecx
+ 03e9  5b                                pop     ebx
+ 03ea  c3                                ret     
+ 03eb  90                                nop     
+
+int main(int argc, const char *argv[]) {
+ 03ec  53                main_           push    ebx
+ 03ed  51                                push    ecx
+ 03ee  56                                push    esi
+ 03ef  57                                push    edi
+ 03f0  55                                push    ebp
+ 03f1  89 e5                             mov     ebp,esp
+ 03f3  81 ec 14 00 00 00                 sub     esp,00000014H
+ 03f9  89 45 f8                          mov     -8H[ebp],eax
+ 03fc  89 55 fc                          mov     -4H[ebp],edx
+
+        if(argc<3) {
+ 03ff  83 7d f8 03                       cmp     dword ptr -8H[ebp],00000003H
+ 0403  7d 60                             jge     L50
+
+                printf("hdrexp - v1.0\n");
+ 0405  b8 1d 00 00 00                    mov     eax,offset L63
+ 040a  50                                push    eax
+ 040b  e8 00 00 00 00                    call    printf_
+ 0410  83 c4 04                          add     esp,00000004H
+
+                printf("Usage: hdrexp <infile> <outfile> [-<maxlevel>] [includedir...]\n");
+ 0413  b8 2c 00 00 00                    mov     eax,offset L64
+ 0418  50                                push    eax
+ 0419  e8 00 00 00 00                    call    printf_
+ 041e  83 c4 04                          add     esp,00000004H
+
+                printf(" infile       input header file\n");
+ 0421  b8 6c 00 00 00                    mov     eax,offset L65
+ 0426  50                                push    eax
+ 0427  e8 00 00 00 00                    call    printf_
+ 042c  83 c4 04                          add     esp,00000004H
+
+                printf(" outfile      output header file\n");
+ 042f  b8 8d 00 00 00                    mov     eax,offset L66
+ 0434  50                                push    eax
+ 0435  e8 00 00 00 00                    call    printf_
+ 043a  83 c4 04                          add     esp,00000004H
+
+                printf(" maxlevel     maximum expand level (default=1)\n");
+ 043d  b8 af 00 00 00                    mov     eax,offset L67
+ 0442  50                                push    eax
+ 0443  e8 00 00 00 00                    call    printf_
+ 0448  83 c4 04                          add     esp,00000004H
+
+                printf(" includedir   include directories\n");
+ 044b  b8 df 00 00 00                    mov     eax,offset L68
+ 0450  50                                push    eax
+ 0451  e8 00 00 00 00                    call    printf_
+ 0456  83 c4 04                          add     esp,00000004H
+
+                return 1;
+        }
+
+ 0459  c7 45 ec 01 00 00 
+       00                                mov     dword ptr -14H[ebp],00000001H
+ 0460  e9 fd 00 00 00                    jmp     L58
+
+        FILE *ifp=fopen(argv[1],"rt");
+ 0465  ba 02 01 00 00    L50             mov     edx,offset L69
+ 046a  8b 45 fc                          mov     eax,-4H[ebp]
+ 046d  8b 40 04                          mov     eax,+4H[eax]
+ 0470  e8 00 00 00 00                    call    fopen_
+ 0475  89 45 f0                          mov     -10H[ebp],eax
+
+        if(!ifp) {
+ 0478  83 7d f0 00                       cmp     dword ptr -10H[ebp],00000000H
+ 047c  75 26                             jne     L51
+
+                fprintf(stderr,"hdrexp: could not open %s\n",argv[1]);
+ 047e  8b 45 fc                          mov     eax,-4H[ebp]
+ 0481  ff 70 04                          push    +4H[eax]
+ 0484  b8 05 01 00 00                    mov     eax,offset L70
+ 0489  50                                push    eax
+ 048a  b8 34 00 00 00                    mov     eax,offset ___iob+34H
+ 048f  50                                push    eax
+ 0490  e8 00 00 00 00                    call    fprintf_
+ 0495  83 c4 0c                          add     esp,0000000cH
+
+                return 2;
+        }
+
+ 0498  c7 45 ec 02 00 00 
+       00                                mov     dword ptr -14H[ebp],00000002H
+ 049f  e9 be 00 00 00                    jmp     L58
+
+        ofp=fopen(argv[2],"wt");
+ 04a4  ba 20 01 00 00    L51             mov     edx,offset L71
+ 04a9  8b 45 fc                          mov     eax,-4H[ebp]
+ 04ac  8b 40 08                          mov     eax,+8H[eax]
+ 04af  e8 00 00 00 00                    call    fopen_
+ 04b4  a3 00 00 00 00                    mov     __iobuf near * near ofp,eax
+
+        if(!ofp) {
+ 04b9  83 3d 00 00 00 00 
+       00                                cmp     dword ptr __iobuf near * near ofp,00000000H
+ 04c0  75 26                             jne     L52
+
+                fprintf(stderr,"hdrexp: could not create %s\n",argv[2]);
+ 04c2  8b 45 fc                          mov     eax,-4H[ebp]
+ 04c5  ff 70 08                          push    +8H[eax]
+ 04c8  b8 23 01 00 00                    mov     eax,offset L72
+ 04cd  50                                push    eax
+ 04ce  b8 34 00 00 00                    mov     eax,offset ___iob+34H
+ 04d3  50                                push    eax
+ 04d4  e8 00 00 00 00                    call    fprintf_
+ 04d9  83 c4 0c                          add     esp,0000000cH
+
+                return 3;
+        }
+
+        int r;
+ 04dc  c7 45 ec 03 00 00 
+       00                                mov     dword ptr -14H[ebp],00000003H
+ 04e3  e9 7a 00 00 00                    jmp     L58
+
+        if(argv[3] && argv[3][0]=='-') {
+ 04e8  8b 45 fc          L52             mov     eax,-4H[ebp]
+ 04eb  83 78 0c 00                       cmp     dword ptr +0cH[eax],00000000H
+ 04ef  74 12                             je      L53
+ 04f1  8b 45 fc                          mov     eax,-4H[ebp]
+ 04f4  8b 40 0c                          mov     eax,+0cH[eax]
+ 04f7  8a 00                             mov     al,[eax]
+ 04f9  25 ff 00 00 00                    and     eax,000000ffH
+ 04fe  83 f8 2d                          cmp     eax,0000002dH
+ 0501  74 02                             je      L54
+ 0503  eb 1e             L53             jmp     L55
+
+                maxLevel=atoi(argv[2]+1);
+ 0505  8b 45 fc          L54             mov     eax,-4H[ebp]
+ 0508  8b 40 08                          mov     eax,+8H[eax]
+ 050b  40                                inc     eax
+ 050c  e8 00 00 00 00                    call    atoi_
+ 0511  a3 00 00 00 00                    mov     int near maxLevel,eax
+
+                includedirs=argv+4;
+ 0516  8b 45 fc                          mov     eax,-4H[ebp]
+ 0519  83 c0 10                          add     eax,00000010H
+ 051c  a3 00 00 00 00                    mov     char const near * near * near includedirs,eax
+
+        } else
+ 0521  eb 0b                             jmp     L56
+
+                includedirs=argv+3;
+
+ 0523  8b 45 fc          L55             mov     eax,-4H[ebp]
+ 0526  83 c0 0c                          add     eax,0000000cH
+ 0529  a3 00 00 00 00                    mov     char const near * near * near includedirs,eax
+
+        r=expandFile(ifp);
+
+ 052e  8b 45 f0          L56             mov     eax,-10H[ebp]
+ 0531  e8 00 00 00 00                    call    int near expandFile( __iobuf near * )
+ 0536  89 45 f4                          mov     -0cH[ebp],eax
+
+        fclose(ifp);
+ 0539  8b 45 f0                          mov     eax,-10H[ebp]
+ 053c  e8 00 00 00 00                    call    fclose_
+
+        fclose(ofp);
+
+ 0541  a1 00 00 00 00                    mov     eax,__iobuf near * near ofp
+ 0546  e8 00 00 00 00                    call    fclose_
+
+        if(r) {
+ 054b  83 7d f4 00                       cmp     dword ptr -0cH[ebp],00000000H
+ 054f  74 0b                             je      L57
+
+                remove(argv[2]);
+        }
+ 0551  8b 45 fc                          mov     eax,-4H[ebp]
+ 0554  8b 40 08                          mov     eax,+8H[eax]
+ 0557  e8 00 00 00 00                    call    remove_
+
+        return r;
+ 055c  8b 45 f4          L57             mov     eax,-0cH[ebp]
+ 055f  89 45 ec                          mov     -14H[ebp],eax
+
+}
+
+ 0562  8b 45 ec          L58             mov     eax,-14H[ebp]
+ 0565  89 ec                             mov     esp,ebp
+ 0567  5d                                pop     ebp
+ 0568  5f                                pop     edi
+ 0569  5e                                pop     esi
+ 056a  59                                pop     ecx
+ 056b  5b                                pop     ebx
+ 056c  c3                                ret     
+
+No disassembly errors
+
+------------------------------------------------------------
+
+Segment: CONST  DWORD USE32  00000140 bytes  
+ 0000  2f 00                   L59             - /.
+ 0002  72 74 00                L60             - rt.
+ 0005  72 74 00                L61             - rt.
+ 0008  68 64 72 65 78 70 3a 20 L62             - hdrexp: 
+ 0010  77 72 69 74 65 20 65 72                 - write er
+ 0018  72 6f 72 0a 00                          - ror..
+ 001d  68 64 72 65 78 70 20 2d L63             - hdrexp -
+ 0025  20 76 31 2e 30 0a 00                    -  v1.0..
+ 002c  55 73 61 67 65 3a 20 68 L64             - Usage: h
+ 0034  64 72 65 78 70 20 3c 69                 - drexp <i
+ 003c  6e 66 69 6c 65 3e 20 3c                 - nfile> <
+ 0044  6f 75 74 66 69 6c 65 3e                 - outfile>
+ 004c  20 5b 2d 3c 6d 61 78 6c                 -  [-<maxl
+ 0054  65 76 65 6c 3e 5d 20 5b                 - evel>] [
+ 005c  69 6e 63 6c 75 64 65 64                 - included
+ 0064  69 72 2e 2e 2e 5d 0a 00                 - ir...]..
+ 006c  20 69 6e 66 69 6c 65 20 L65             -  infile 
+ 0074  20 20 20 20 20 20 69 6e                 -       in
+ 007c  70 75 74 20 68 65 61 64                 - put head
+ 0084  65 72 20 66 69 6c 65 0a                 - er file.
+ 008c  00                                      - .
+ 008d  20 6f 75 74 66 69 6c 65 L66             -  outfile
+ 0095  20 20 20 20 20 20 6f 75                 -       ou
+ 009d  74 70 75 74 20 68 65 61                 - tput hea
+ 00a5  64 65 72 20 66 69 6c 65                 - der file
+ 00ad  0a 00                                   - ..
+ 00af  20 6d 61 78 6c 65 76 65 L67             -  maxleve
+ 00b7  6c 20 20 20 20 20 6d 61                 - l     ma
+ 00bf  78 69 6d 75 6d 20 65 78                 - ximum ex
+ 00c7  70 61 6e 64 20 6c 65 76                 - pand lev
+ 00cf  65 6c 20 28 64 65 66 61                 - el (defa
+ 00d7  75 6c 74 3d 31 29 0a 00                 - ult=1)..
+ 00df  20 69 6e 63 6c 75 64 65 L68             -  include
+ 00e7  64 69 72 20 20 20 69 6e                 - dir   in
+ 00ef  63 6c 75 64 65 20 64 69                 - clude di
+ 00f7  72 65 63 74 6f 72 69 65                 - rectorie
+ 00ff  73 0a 00                                - s..
+ 0102  72 74 00                L69             - rt.
+ 0105  68 64 72 65 78 70 3a 20 L70             - hdrexp: 
+ 010d  63 6f 75 6c 64 20 6e 6f                 - could no
+ 0115  74 20 6f 70 65 6e 20 25                 - t open %
+ 011d  73 0a 00                                - s..
+ 0120  77 74 00                L71             - wt.
+ 0123  68 64 72 65 78 70 3a 20 L72             - hdrexp: 
+ 012b  63 6f 75 6c 64 20 6e 6f                 - could no
+ 0133  74 20 63 72 65 61 74 65                 - t create
+ 013b  20 25 73 0a 00                          -  %s..
+
+No disassembly errors
+
+------------------------------------------------------------
+
+Segment: _DATA  DWORD USE32  00000004 bytes  
+ 0000                          int near maxLevel LABEL BYTE
+ 0000  01 00 00 00                             - ....
+
+No disassembly errors
+
+------------------------------------------------------------
+
+Segment: _BSS  DWORD USE32  0000000c bytes  
+
+No disassembly errors
+
+------------------------------------------------------------
+
+Segment: $$SYMBOLS  BYTE USE16  00000202 bytes  
+ 0000  15 12                                   - ..
+ 0002  00 00 00 00 00 00                       DP      int near currentLevel
+ 0008  0c 63 75 72 72 65 6e 74                 - .current
+ 0010  4c 65 76 65 6c 11 12                    - Level..
+ 0017  00 00 00 00 00 00                       DP      int near maxLevel
+ 001d  0c 6d 61 78 4c 65 76 65                 - .maxLeve
+ 0025  6c 0c 12                                - l..
+ 0028  00 00 00 00 00 00                       DP      __iobuf near * near ofp
+ 002e  24 6f 66 70 14 12                       - $ofp..
+ 0034  00 00 00 00 00 00                       DP      char const near * near * near includedirs
+ 003a  26 69 6e 63 6c 75 64 65                 - &include
+ 0042  64 69 72 73 08 32                       - dirs.2
+ 0048  00 00 00 00 00 00                       DP      __iobuf near * near openFileSomewhere( char const near * )
+ 004e  0c 23 21 00 00 00 4f 00                 - .#!...O.
+ 0056  00 00 6c 00 0a 11 11 f0                 - ..l.....
+ 005e  fe 27 6e 61 6d 65 08 11                 - .'name..
+ 0066  10 f0 24 69 66 70 0c 23                 - ..$ifp.#
+ 006e  21 00 00 00 4f 00 00 00                 - !...O...
+ 0076  78 00 29 24 00 00 00 00                 - x.)$....
+ 007e  85 00 00 00 00 00 0e 09                 - ........
+ 0086  18 00 00 00 28 30 1c 01                 - ....(0..
+ 008e  30 1c 6f 70 65 6e 46 69                 - 0.openFi
+ 0096  6c 65 53 6f 6d 65 77 68                 - leSomewh
+ 009e  65 72 65 0d 11 10 fc 25                 - ere....%
+ 00a6  66 69 6c 65 6e 61 6d 65                 - filename
+ 00ae  06 11 10 f8 26 70 24 24                 - ....&p$$
+ 00b6  88 00 00 00 46 00 00 00                 - ....F...
+ 00be  00 00 0e 09 18 00 00 00                 - ........
+ 00c6  28 30 1c 01 30 1c 6f 70                 - (0..0.op
+ 00ce  65 6e 46 69 6c 65 48 65                 - enFileHe
+ 00d6  72 65 0d 11 10 fc 25 66                 - re....%f
+ 00de  69 6c 65 6e 61 6d 65 08                 - ilename.
+ 00e6  11 10 f8 24 69 66 70 1f                 - ...$ifp.
+ 00ee  24 d0 00 00 00 54 00 00                 - $....T..
+ 00f6  00 00 00 0e 09 18 00 00                 - ........
+ 00fe  00 29 30 1c 01 30 1c 64                 - .)0..0.d
+ 0106  65 66 44 75 6d 70 09 11                 - efDump..
+ 010e  10 fc 25 6c 69 6e 65 0c                 - ..%line.
+ 0116  23 91 02 00 00 25 00 00                 - #....%..
+ 011e  00 21 01 23 24 24 01 00                 - .!.#$$..
+ 0126  00 5a 02 00 00 00 00 0e                 - .Z......
+ 012e  09 18 00 00 00 29 30 1c                 - .....)0.
+ 0136  01 30 1c 70 72 6f 63 65                 - .0.proce
+ 013e  73 73 4c 69 6e 65 09 11                 - ssLine..
+ 0146  10 fc 25 6c 69 6e 65 06                 - ..%line.
+ 014e  11 10 f0 25 70 0a 11 10                 - ...%p...
+ 0156  f8 06 65 63 68 61 72 0a                 - ..echar.
+ 015e  11 10 e8 25 73 74 61 72                 - ...%star
+ 0166  74 08 11 10 ec 25 65 6e                 - t....%en
+ 016e  64 0d 11 11 e0 fe 27 69                 - d.....'i
+ 0176  6e 63 4e 61 6d 65 06 11                 - ncName..
+ 017e  10 e4 1c 64 08 11 10 f4                 - ...d....
+ 0186  24 69 66 70 22 24 80 03                 - $ifp"$..
+ 018e  00 00 6b 00 00 00 00 00                 - ..k.....
+ 0196  0e 09 18 00 00 00 2a 30                 - ......*0
+ 019e  1c 01 30 1c 65 78 70 61                 - ..0.expa
+ 01a6  6e 64 46 69 6c 65 08 11                 - ndFile..
+ 01ae  10 fc 24 69 66 70 0a 11                 - ..$ifp..
+ 01b6  11 f8 fe 27 6c 69 6e 65                 - ...'line
+ 01be  06 11 10 f8 0c 72 1e 24                 - .....r.$
+ 01c6  ec 03 00 00 81 01 00 00                 - ........
+ 01ce  00 00 0d 08 14 00 00 00                 - ........
+ 01d6  2b 30 1c 02 30 1c 30 1f                 - +0..0.0.
+ 01de  6d 61 69 6e 09 11 10 f8                 - main....
+ 01e6  0c 61 72 67 63 09 11 10                 - .argc...
+ 01ee  fc 26 61 72 67 76 08 11                 - .&argv..
+ 01f6  10 f0 24 69 66 70 06 11                 - ..$ifp..
+ 01fe  10 f4 0c 72                             - ...r
+
+No disassembly errors
+
+------------------------------------------------------------
+
+Segment: $$TYPES  BYTE USE16  0000017d bytes  
+ 0000  06 13 7d 01 00 00 06 11                 - ..}.....
+ 0008  65 6e 75 6d 07 11 75 6e                 - enum..un
+ 0010  69 6f 6e 08 11 73 74 72                 - ion..str
+ 0018  75 63 74 07 11 63 6c 61                 - uct..cla
+ 0020  73 73 0c 10 11 5f 5f 73                 - ss...__s
+ 0028  65 67 6d 65 6e 74 07 10                 - egment..
+ 0030  10 63 68 61 72 03 10 00                 - .char...
+ 0038  03 10 10 03 10 11 03 10                 - ........
+ 0040  01 03 10 11 06 10 03 69                 - .......i
+ 0048  6e 74 0f 10 13 75 6e 73                 - nt...uns
+ 0050  69 67 6e 65 64 20 69 6e                 - igned in
+ 0058  74 03 10 03 03 10 13 03                 - t.......
+ 0060  10 23 03 10 27 03 10 30                 - .#..'..0
+ 0068  03 46 12 04 72 13 00 03                 - .F..r...
+ 0070  46 14 08 60 03 00 0c 00                 - F..`....
+ 0078  00 00 0f 67 01 84 22 08                 - ...g..".
+ 0080  69 0d 5f 5f 69 6e 64 65                 - i.__inde
+ 0088  78 0f 67 01 84 22 04 69                 - x.g..".i
+ 0090  0d 5f 5f 64 65 6c 74 61                 - .__delta
+ 0098  09 67 01 6b 15 5f 5f 66                 - .g.k.__f
+ 00a0  6e 04 72 12 00 03 46 17                 - n.r...F.
+ 00a8  0c 12 00 18 6f 6e 65 78                 - ....onex
+ 00b0  69 74 5f 74 0b 12 00 09                 - it_t....
+ 00b8  77 63 68 61 72 5f 74 0a                 - wchar_t.
+ 00c0  12 00 0e 66 70 6f 73 5f                 - ...fpos_
+ 00c8  74 03 46 06 04 20 00 1c                 - t.F.. ..
+ 00d0  0d 12 00 1d 5f 5f 76 61                 - ....__va
+ 00d8  5f 6c 69 73 74 0a 12 00                 - _list...
+ 00e0  0d 73 69 7a 65 5f 74 03                 - .size_t.
+ 00e8  46 08 08 60 08 00 1a 00                 - F..`....
+ 00f0  00 00 0d 61 19 08 5f 74                 - ...a.._t
+ 00f8  6d 70 66 63 68 61 72 0d                 - mpfchar.
+ 0100  61 18 08 5f 75 6e 67 6f                 - a.._ungo
+ 0108  74 74 65 6e 0c 61 14 0d                 - tten.a..
+ 0110  5f 62 75 66 73 69 7a 65                 - _bufsize
+ 0118  0b 61 10 0c 5f 68 61 6e                 - .a.._han
+ 0120  64 6c 65 09 61 0c 0d 5f                 - dle.a.._
+ 0128  66 6c 61 67 09 61 08 20                 - flag.a. 
+ 0130  5f 62 61 73 65 08 61 04                 - _base.a.
+ 0138  0c 5f 63 6e 74 08 61 00                 - ._cnt.a.
+ 0140  20 5f 70 74 72 0b 12 03                 -  _ptr...
+ 0148  21 5f 5f 69 6f 62 75 66                 - !__iobuf
+ 0150  08 12 00 22 46 49 4c 45                 - ..."FILE
+ 0158  03 46 23 03 46 06 03 46                 - .F#.F..F
+ 0160  25 05 21 ff 00 06 05 72                 - %.!....r
+ 0168  24 01 25 05 72 0c 01 25                 - $.%.r..%
+ 0170  05 72 0c 01 24 06 72 0c                 - .r..$.r.
+ 0178  02 0c 26 02 14                          - ..&..
+
+No disassembly errors
+
+------------------------------------------------------------
+
+Segment: $$TYPES  BYTE USE16  00000026 bytes  
+ 0000  00 00 01 00 00 00 44 3a                 - ......D:
+ 0008  5c 73 6f 75 72 63 65 5c                 - \source\
+ 0010  6f 73 32 5c 68 64 72 65                 - os2\hdre
+ 0018  78 70 5c 68 64 72 65 78                 - xp\hdrex
+ 0020  70 2e 63 70 70 00                       - p.cpp.
+
+No disassembly errors
+
+------------------------------------------------------------
